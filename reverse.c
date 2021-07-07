@@ -6,32 +6,32 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+void remove_newline(char *ptr){
+    char *qtr=strchr(ptr,'\n');
+    if(qtr) *qtr='\0';
+}
+
 int main(int argc, char **argv){
-    int fd;
-    int file_size = 0;
-
-    fd = open(argv[1], O_RDWR);
-    
-    file_size = lseek(fd, 0, SEEK_END);
-
-    for(int i = 0; i < file_size / 2; i++){
-        char head[2] = {0};
-        char tail[2] = {0};
-
-        lseek(fd, i, SEEK_SET);
-        read(fd, head, 1);
-
-        lseek(fd, -1 * i - 1, SEEK_END);
-        read(fd, tail, 1);
-
-        lseek(fd, i, SEEK_SET);
-        write(fd, tail, 1);
-
-        lseek(fd, -1 * i - 1, SEEK_END);
-        write(fd, head, 1);
+    int cnt=0;
+    char buf[1024],word[1024];
+    int fd_in, fd_out;
+    fd_in = open(argv[1], O_RDONLY);
+    fd_out = open(argv[1], O_WRONLY | O_CREAT, 00600);
+    int read_size=0;
+    while(1){
+        read_size = read(fd_in, buf, 1024);
+        if(read_size <= 0) break;
+        cnt=read_size-1;
+        for(int i=0;i<read_size;i++){
+            word[i]=buf[i];
+        }
+        for(int i=0;i<read_size;i++){
+            word[cnt-i]=buf[i];
+        }
+        remove_newline(word);
+        write(fd_out,word,read_size);
     }
-
-    close(fd);
-
+    close(fd_out);
+    close(fd_in);
     return 0;
 }
